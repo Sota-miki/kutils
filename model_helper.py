@@ -2,11 +2,10 @@ import os, sys, keras, numbers, glob, shutil
 import multiprocessing as mp, pandas as pd, numpy as np
 from pprint import pprint
 from munch import Munch
-
-from keras.callbacks import TensorBoard, ModelCheckpoint, Callback, EarlyStopping
-from keras import optimizers
-from keras.models import Model, load_model
-from keras.utils import multi_gpu_model
+import tensorflow as tf
+from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, Callback, EarlyStopping
+from tensorflow.keras import optimizers
+from tensorflow.keras.models import Model, load_model
 
 from .generators import *
 from .generic import *
@@ -216,15 +215,23 @@ class ModelHelper:
         print_sizes(x)
         return x, gen
 
-    def set_multi_gpu(self, gpus=None):
+    def set_multi_gpu(self):
         """
-        Enable multi-GPU processing.
-        Creates a copy of the CPU model and calls `multi_gpu_model`.
+        Enable multi-GPU processing using `tf.distribute.MirroredStrategy`.
+        """
+        strategy = tf.distribute.MirroredStrategy()
+        with strategy.scope():
+            self.model = self._create_model()
 
-        :param gpus: number of GPUs to use, defaults to all.
+    def _create_model(self):
         """
-        self.model_cpu = self.model
-        self.model = multi_gpu_model(self.model, gpus=gpus)        
+        Re-create the model within a MirroredStrategy scope for multi-GPU training.
+        """
+        optimizer = self.params.optimizer
+        self.model.compile(optimizer=optimizer,
+                           loss=self.params.loss,
+                           metrics=self.params.metrics)
+        return self.model       
 
     def train(self, train_gen=None, valid_gen=None, lr=1e-4, epochs=1):
         """
@@ -248,7 +255,8 @@ class ModelHelper:
             valid_gen = self.make_generator(ids[ids.set == 'validation'],
                                             deterministic=True)
 
-        if lr: self.params.lr = lr
+        if lr: 
+            self.params.lr = lr
         self.params.optimizer = update_config(self.params.optimizer,
                                               lr=self.params.lr)
         
@@ -265,15 +273,15 @@ class ModelHelper:
             pretty(self.params)
             print('\nLearning')
 
-        history = self.model.fit_generator(train_gen, epochs = epochs,
-                                           steps_per_epoch   = len(train_gen),
-                                           validation_data   = valid_gen, 
-                                           validation_steps  = len(valid_gen),
-                                           workers           = params.workers, 
-                                           callbacks         = self._callbacks(),
-                                           max_queue_size    = params.max_queue_size,
-                                           class_weight      = self.params.class_weights,
-                                           use_multiprocessing = params.multiproc)
+        history = self.model.fit(train_gen, epochs = epochs,
+                                steps_per_epoch   = len(train_gen),
+                                validation_data   = valid_gen, 
+                                validation_steps  = len(valid_gen),
+                                workers           = params.workers, 
+                                callbacks         = self._callbacks(),
+                                max_queue_size    = params.max_queue_size,
+                                class_weight      = self.params.class_weights,
+                                use_multiprocessing = params.multiproc)
         return history
     
     def clean_outputs(self):
