@@ -1,21 +1,17 @@
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-import keras
-from keras.utils import plot_model
-from keras.layers import *
+import tensorflow.keras as keras
+from tensorflow.keras.utils import plot_model
+from tensorflow.keras.layers import *
 
-from keras.applications.inception_v3 import InceptionV3
-from keras.applications.densenet import DenseNet201
-from keras.applications.resnet50 import ResNet50
-from keras.applications.inception_resnet_v2 import InceptionResNetV2
-from keras.applications.vgg16 import VGG16
-from keras.applications.nasnet import NASNetMobile
+from tensorflow.keras.applications import InceptionV3,DenseNet201, ResNet50, InceptionResNetV2, VGG16, NASNetMobile
+
 from functools import reduce
 
 source_module = {
                  InceptionV3:       keras.applications.inception_v3,
                  DenseNet201:       keras.applications.densenet,
-                 ResNet50:          keras.applications.resnet50,       
+                 ResNet50:          keras.applications.resnet,       
                  InceptionResNetV2: keras.applications.inception_resnet_v2,
                  VGG16:             keras.applications.vgg16,
                  NASNetMobile:      keras.applications.nasnet
@@ -27,7 +23,7 @@ from .model_helper import *
 process_input = {
                  InceptionV3:       keras.applications.inception_v3.preprocess_input,
                  DenseNet201:       keras.applications.densenet.preprocess_input,
-                 ResNet50:          keras.applications.resnet50.preprocess_input,
+                 ResNet50:          keras.applications.resnet.preprocess_input,
                  InceptionResNetV2: keras.applications.inception_resnet_v2.preprocess_input,
                  VGG16:             keras.applications.vgg16.preprocess_input,
                  NASNetMobile:      keras.applications.nasnet.preprocess_input
@@ -109,7 +105,7 @@ def conv2d_bn(x, filters, num_row, num_col, padding='same',
     else:
         bn_name = None
         conv_name = None
-    if K.image_data_format() == 'channels_first':
+    if keras.image_data_format() == 'channels_first':
         bn_axis = 1
     else:
         bn_axis = 3
