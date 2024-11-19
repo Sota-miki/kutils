@@ -5,7 +5,7 @@ from numpy import interp
 from numpy.random import rand
 import PIL
 from PIL import Image
-from keras.preprocessing.image import img_to_array, array_to_img, load_img
+from tensorflow.keras.utils import img_to_array, array_to_img, load_img
 import matplotlib.pyplot as plt
 
 from .generic import *
@@ -83,7 +83,7 @@ def read_image_batch(image_paths, image_size=None):
     for i, image_path in enumerate(image_paths):
         im = load_img(image_path)
         if image_size is not None:
-            im = im.resize(image_size, Image.LANCZOS)
+            im = im.resize(image_size, Image.Resampling.LANCZOS)
         x = img_to_array(im)
         if images is None:
             images = np.zeros((len(image_paths),) + x.shape,
