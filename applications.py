@@ -105,7 +105,7 @@ def conv2d_bn(x, filters, num_row, num_col, padding='same',
     else:
         bn_name = None
         conv_name = None
-    if keras.image_data_format() == 'channels_first':
+    if keras.backend.image_data_format() == 'channels_first':
         bn_axis = 1
     else:
         bn_axis = 3
