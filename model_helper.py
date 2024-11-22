@@ -92,8 +92,8 @@ class ModelHelper:
                             histogram_freq = 0,                  #
 
                             logs_root      = '../logs/',         # TensorBoard logs
-                            models_root    = '../models/',       # saved models path
-                            features_root  = '../features/',     # saved features path (by `save_activations`)
+                            models_root    = './models/',       # saved models path
+                            features_root  = './features/',     # saved features path (by `save_activations`)
                             gen_class      = None                # generator class
                                                                  # inferred from self.gen_params.data_path
                             )
@@ -383,6 +383,13 @@ class ModelHelper:
         model_file_name = (model_name + ('_best' if best else '_final') + 
                           ('_weights' if from_weights else '') + '.h5')
         model_path = os.path.join(self.params.models_root, model_file_name)
+
+
+        print(f"Generated model path: {model_path}")
+        if not os.path.exists(model_path):
+            print("Path does not exist!")
+            return False
+
         if not os.path.exists(model_path):
             print('Model NOT loaded:', model_file_name, 'does not exist')
             return False
